@@ -16,3 +16,6 @@ permissions:
   scam.setheight:
     description: Allows use of /setheight
     default: true
+  scam.setheight.bypass:
+    description: Bypass plugin height limits (still bound by Minecraft's own scale limits)
+    default: op

@@ -13,12 +13,14 @@ import java.util.List;
 
 public class ScamPlugin extends JavaPlugin implements CommandExecutor, TabCompleter {
 
-    // Default Minecraft player height in meters
     private static final double BASE_HEIGHT_M = 1.8;
 
-    // Allowed range in meters (1/30 m ~ 3.3 cm  →  2 m)
     private static final double MIN_HEIGHT_M = 1.30;
     private static final double MAX_HEIGHT_M = 2.0;
+
+    // Minecraft's own attribute limits for generic.scale
+    private static final double MC_MIN_HEIGHT_M = 0.0625 * BASE_HEIGHT_M; // ~0.1125 m
+    private static final double MC_MAX_HEIGHT_M = 16.0  * BASE_HEIGHT_M;  // 28.8 m
 
     @Override
     public void onEnable() {
@@ -55,18 +57,21 @@ public class ScamPlugin extends JavaPlugin implements CommandExecutor, TabComple
         }
 
         double heightM = result.meters();
+        boolean bypass = player.hasPermission("scam.setheight.bypass");
+        double minH = bypass ? MC_MIN_HEIGHT_M : MIN_HEIGHT_M;
+        double maxH = bypass ? MC_MAX_HEIGHT_M : MAX_HEIGHT_M;
 
-        if (heightM < MIN_HEIGHT_M) {
+        if (heightM < minH) {
             player.sendMessage(String.format(
                 "§c[SCAM] §rToo small! Minimum is §e%.4fm §r(§e%.2fcm §r/ §e%.3fft§r).",
-                MIN_HEIGHT_M, MIN_HEIGHT_M * 100.0, MIN_HEIGHT_M / 0.3048));
+                minH, minH * 100.0, minH / 0.3048));
             return true;
         }
 
-        if (heightM > MAX_HEIGHT_M) {
+        if (heightM > maxH) {
             player.sendMessage(String.format(
-                "§c[SCAM] §rToo tall! Maximum is §e%.1fm §r(§e%.0fcm §r/ §e%.4fft§r).",
-                MAX_HEIGHT_M, MAX_HEIGHT_M * 100.0, MAX_HEIGHT_M / 0.3048));
+                "§c[SCAM] §rToo tall! Maximum is §e%.4fm §r(§e%.2fcm §r/ §e%.4fft§r).",
+                maxH, maxH * 100.0, maxH / 0.3048));
             return true;
         }
 
@@ -95,12 +100,15 @@ public class ScamPlugin extends JavaPlugin implements CommandExecutor, TabComple
     // -------------------------------------------------------------------------
 
     private void sendUsage(Player player) {
+        boolean bypass = player.hasPermission("scam.setheight.bypass");
+        double minH = bypass ? MC_MIN_HEIGHT_M : MIN_HEIGHT_M;
+        double maxH = bypass ? MC_MAX_HEIGHT_M : MAX_HEIGHT_M;
         player.sendMessage("§6[SCAM] §eScale Character Attribute Mod");
         player.sendMessage("§7Usage: §f/setheight <height>");
         player.sendMessage("§7Units: §fm §7/ §fcm §7/ §fft §7(auto-detected if omitted)");
         player.sendMessage("§7Examples: §f1.8 §7→ 1.8 m  §f180 §7→ 180 cm  §f6ft §7→ feet");
-        player.sendMessage(String.format("§7Range: §f%.4fm §7(%.2fcm) §7to §f%.1fm §7(%.0fcm)",
-            MIN_HEIGHT_M, MIN_HEIGHT_M * 100.0, MAX_HEIGHT_M, MAX_HEIGHT_M * 100.0));
+        player.sendMessage(String.format("§7Range: §f%.4fm §7(%.2fcm) §7to §f%.4fm §7(%.2fcm)",
+            minH, minH * 100.0, maxH, maxH * 100.0));
     }
 
     /**
