@@ -1,0 +1,18 @@
+name: SCAM
+version: 1.0.0
+main: dev.lokifisch.scam.ScamPlugin
+api-version: "1.20"
+description: "SCAM — Scale Character Attribute Mod"
+authors: [ lokifisch ]
+
+commands:
+  setheight:
+    description: Set your player height. Accepts m, cm, or ft.
+    usage: /setheight <height>  (e.g. 1.8  |  1.8m  |  180cm  |  6ft)
+    permission: scam.setheight
+    aliases: [ sh ]
+
+permissions:
+  scam.setheight:
+    description: Allows use of /setheight
+    default: true

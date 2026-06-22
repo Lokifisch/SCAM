@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p /home/lokifisch/Code/RH/SetHeight/src/main/java/dev/lokifisch/setheight)",
+      "Bash(mkdir -p /home/lokifisch/Code/RH/SetHeight/src/main/resources)",
+      "Bash(mkdir -p /home/lokifisch/Code/RH/SCAM/src/main/java/dev/lokifisch/scam)",
+      "Bash(mkdir -p /home/lokifisch/Code/RH/SCAM/src/main/resources)",
+      "Bash(rm -rf /home/lokifisch/Code/RH/SetHeight)"
+    ]
+  }
+}
