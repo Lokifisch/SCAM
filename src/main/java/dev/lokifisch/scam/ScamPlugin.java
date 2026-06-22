@@ -17,7 +17,7 @@ public class ScamPlugin extends JavaPlugin implements CommandExecutor, TabComple
     private static final double BASE_HEIGHT_M = 1.8;
 
     // Allowed range in meters (1/30 m ~ 3.3 cm  →  2 m)
-    private static final double MIN_HEIGHT_M = 1.0 / 30.0;
+    private static final double MIN_HEIGHT_M = 1.30;
     private static final double MAX_HEIGHT_M = 2.0;
 
     @Override

@@ -28,10 +28,10 @@ Append `m`, `cm`, or `ft` to override detection at any time.
 
 |         | Metric              | Imperial    |
 |---------|---------------------|-------------|
-| **Min** | 1/30 m (~3.3 cm)    | ~0.109 ft   |
+| **Min** | 1.30 m (130 cm)     | ~4.27 ft    |
 | **Max** | 2 m (200 cm)        | ~6.56 ft    |
 
-> Minecraft's internal floor for `generic.scale` is `0.0625` (~11 cm), so heights below that are rejected by the game itself.
+> Minecraft's internal floor for `generic.scale` is `0.0625` (~11 cm).
 
 ---
 
