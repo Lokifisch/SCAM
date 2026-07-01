@@ -7,11 +7,15 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.List;
 
-public class ScamPlugin extends JavaPlugin implements CommandExecutor, TabCompleter {
+public class ScamPlugin extends JavaPlugin implements CommandExecutor, TabCompleter, Listener {
 
     private static final double BASE_HEIGHT_M = 1.8;
 
@@ -22,22 +26,70 @@ public class ScamPlugin extends JavaPlugin implements CommandExecutor, TabComple
     private static final double MC_MIN_HEIGHT_M = 0.0625 * BASE_HEIGHT_M; // ~0.1125 m
     private static final double MC_MAX_HEIGHT_M = 16.0  * BASE_HEIGHT_M;  // 28.8 m
 
+    private static final String UPDATE_REPO = "Lokifisch/SCAM";
+
+    private UpdateChecker updateChecker;
+    private BukkitTask updateTask;
+
     @Override
     public void onEnable() {
+        saveDefaultConfig();
+
         getCommand("setheight").setExecutor(this);
         getCommand("setheight").setTabCompleter(this);
+        getCommand("scam").setExecutor(this);
+        getCommand("scam").setTabCompleter(this);
+
+        this.updateChecker = new UpdateChecker(this, UPDATE_REPO, getFile());
+        getServer().getPluginManager().registerEvents(this, this);
+        startUpdateChecker();
+
         getLogger().info("SCAM (Scale Character Attribute Mod) enabled.");
     }
 
     @Override
     public void onDisable() {
+        if (updateTask != null) {
+            updateTask.cancel();
+        }
         getLogger().info("SCAM disabled.");
+    }
+
+    private void startUpdateChecker() {
+        if (updateTask != null) {
+            updateTask.cancel();
+            updateTask = null;
+        }
+        if (!getConfig().getBoolean("update-checker.enabled", true)) {
+            return;
+        }
+        boolean autoUpdate = getConfig().getBoolean("update-checker.auto-update", true);
+        updateChecker.checkAsync(autoUpdate, null);
+
+        int interval = Math.max(0, getConfig().getInt("update-checker.check-interval-ticks", 432000));
+        if (interval > 0) {
+            this.updateTask = getServer().getScheduler().runTaskTimer(this,
+                    () -> updateChecker.checkAsync(autoUpdate, null), interval, interval);
+        }
+    }
+
+    @EventHandler
+    public void onJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        if (player.hasPermission("scam.admin") && updateChecker.isUpdateAvailable()) {
+            player.sendMessage("§e[SCAM] Update available: §fv" + updateChecker.getLatestVersion()
+                    + " §7(currently v" + updateChecker.getCurrentVersion() + ") - §7" + updateChecker.getReleaseUrl());
+        }
     }
 
     // -------------------------------------------------------------------------
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (command.getName().equalsIgnoreCase("scam")) {
+            return onScamCommand(sender, args);
+        }
+
         if (!(sender instanceof Player player)) {
             sender.sendMessage("§cOnly players can use this command.");
             return true;
@@ -98,6 +150,41 @@ public class ScamPlugin extends JavaPlugin implements CommandExecutor, TabComple
     }
 
     // -------------------------------------------------------------------------
+
+    private boolean onScamCommand(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("scam.admin")) {
+            sender.sendMessage("§c[SCAM] You do not have permission to do that.");
+            return true;
+        }
+        if (args.length >= 1 && args[0].equalsIgnoreCase("update")) {
+            if (args.length >= 2 && args[1].equalsIgnoreCase("check")) {
+                sender.sendMessage("§e[SCAM] Checking for updates...");
+                boolean autoUpdate = getConfig().getBoolean("update-checker.auto-update", true);
+                updateChecker.checkAsync(autoUpdate, () -> reportUpdateStatus(sender));
+                return true;
+            }
+            reportUpdateStatus(sender);
+            return true;
+        }
+        sender.sendMessage("§e[SCAM] commands:");
+        sender.sendMessage("§7  /scam update [check]");
+        return true;
+    }
+
+    private void reportUpdateStatus(CommandSender sender) {
+        if (!updateChecker.isUpdateAvailable()) {
+            sender.sendMessage("§a[SCAM] Running the latest version (v" + updateChecker.getCurrentVersion() + ").");
+            return;
+        }
+        sender.sendMessage("§e[SCAM] Update available: §fv" + updateChecker.getLatestVersion()
+                + " §7(currently v" + updateChecker.getCurrentVersion() + ")");
+        sender.sendMessage("§7  " + updateChecker.getReleaseUrl());
+        if (updateChecker.isStaged()) {
+            sender.sendMessage("§a[SCAM] Already downloaded - restart the server to apply it.");
+        } else {
+            sender.sendMessage("§7Enable §fupdate-checker.auto-update §7in config.yml to stage it automatically.");
+        }
+    }
 
     private void sendUsage(Player player) {
         boolean bypass = player.hasPermission("scam.setheight.bypass");
@@ -160,6 +247,15 @@ public class ScamPlugin extends JavaPlugin implements CommandExecutor, TabComple
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (command.getName().equalsIgnoreCase("scam")) {
+            if (args.length == 1) {
+                return List.of("update");
+            }
+            if (args.length == 2 && args[0].equalsIgnoreCase("update")) {
+                return List.of("check");
+            }
+            return List.of();
+        }
         if (args.length == 1) {
             return List.of("1.8", "180", "6ft", "1.5", "150", "2");
         }

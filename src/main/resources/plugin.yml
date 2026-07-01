@@ -1,5 +1,5 @@
 name: SCAM
-version: 1.0.0
+version: '${project.version}'
 main: dev.lokifisch.scam.ScamPlugin
 api-version: "1.20"
 description: "SCAM — Scale Character Attribute Mod"
@@ -11,6 +11,10 @@ commands:
     usage: /setheight <height>  (e.g. 1.8  |  1.8m  |  180cm  |  6ft)
     permission: scam.setheight
     aliases: [ sh ]
+  scam:
+    description: SCAM admin commands
+    usage: /scam update [check]
+    permission: scam.admin
 
 permissions:
   scam.setheight:
@@ -18,4 +22,7 @@ permissions:
     default: true
   scam.setheight.bypass:
     description: Bypass plugin height limits (still bound by Minecraft's own scale limits)
+    default: op
+  scam.admin:
+    description: Manage SCAM and check for updates
     default: op
